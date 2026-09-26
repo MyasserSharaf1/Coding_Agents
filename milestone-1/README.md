@@ -8,3 +8,4 @@ a copy of the newest version. The full change history and results are in `IMPLEM
 |---|---|---|---|
 | v1 | `notebooks/01_m1-v1-baseline-vs-repair_n20.ipynb` | 2026-09-20 | Baseline vs supervisor+repair, n=20 per benchmark, 4-axis metering (with run outputs) |
 | v2 | `notebooks/02_m1-v2-full-benchmarks-test-agent-lcb.ipynb` | 2026-09-25 | Full MBPP+/HumanEval+, LiveCodeBench, test agent, public/hidden split, resume, rebuilt correlations |
+| v3a | `notebooks/03_m1-v3-kimi-reviewer-120.ipynb` | 2026-09-26 | 120 per benchmark, Kimi K2.6 reviewer arm, walkthrough cell (19c) |
