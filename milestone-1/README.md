@@ -12,3 +12,16 @@ a copy of the newest version. The full change history and results are in `IMPLEM
 | v3b | `notebooks/04_m1-v3-local-7b-reviewer-120.ipynb` | 2026-09-27 | Local qwen2.5-coder:7b reviewer by default; 19d LiveCodeBench check + re-grade |
 | v3c | `notebooks/05_m1-v3-full-benchmarks-lcb900s.ipynb` | 2026-09-28 | Full benchmarks; LCB suite cap 60 s -> 900 s with 10 s per case |
 | v3d | `notebooks/06_m1-v3-run-mbpp120-he164-lcb100.ipynb` | 2026-09-30 | MBPP+ 120, HumanEval+ all 164, LiveCodeBench 100 |
+
+## Other folders
+
+- `src/cells/` one file per notebook cell (source of truth), `src/build.py` assembles them into the notebook
+  (`python src/build.py notebooks/07_....ipynb`), `src/dryrun.py` runs it end to end with a mocked model.
+- `src/*_cell.py` stand-alone cells you can paste into an already-finished run.
+
+## Adding the next version
+
+1. Change cells in `src/cells/`, build to `notebooks/NN_<name>.ipynb`, copy it to `m1-latest.ipynb`.
+2. Add a row above and a line to `IMPLEMENTATION_LOG.md`.
+3. `git add -A && git commit -m "vX: what changed"` (message = the reason, results in the body).
+4. After a Kaggle run, add `results/<version>/summary.md` in the same way so results sit next to the notebook that produced them.
