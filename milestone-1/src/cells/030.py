@@ -10,8 +10,16 @@ SUPERVISOR_MODEL = None     # None = the code model reviews its own work (self-c
 if SUPERVISOR_MODEL is not None and not isinstance(SUPERVISOR_MODEL, str):
     raise ValueError("SUPERVISOR_MODEL must be a model name string or None.")
 
+# ---- Which part of M1 this notebook runs ------------------------------------
+# M1 is split into two notebooks so each fits in Kaggle sessions and can run at the same time:
+#   "evalplus"      : MBPP+ (120) and HumanEval+ (all 164)
+#   "livecodebench" : LiveCodeBench (100) - the long one (programs up to 2048 tokens)
+M1_PART = "evalplus"
+M1_PARTS = {"evalplus":      [("mbpp", "plus"), ("humaneval", "plus")],
+            "livecodebench": [("livecodebench", "lite")]}
+M1_BENCHMARKS = M1_PARTS[M1_PART]
+
 # ---- Benchmarks ------------------------------------------------------------
-M1_BENCHMARKS = [("mbpp", "plus"), ("humaneval", "plus"), ("livecodebench", "lite")]
 # questions per benchmark; None = every question available
 M1_N_PROBLEMS = {"mbpp_plus": 120,         # of 378 (seeded sample)
                  "humaneval_plus": None,   # all 164
@@ -92,13 +100,14 @@ TIMEOUT_SECONDS = 15        # MBPP+ / HumanEval+ suites
 M1_TIMEOUT_S    = TIMEOUT_SECONDS
 
 # ---- Checkpointing ---------------------------------------------------------
-RESUME               = True   # skip questions already in outputs_milestone1/<bench>/rows.jsonl
+RESUME               = True   # skip questions already in outputs_m1_<part>/<bench>/rows.jsonl
+RESUME_FROM_INPUT    = True   # Kaggle: first copy earlier results from any attached input (see below)
 SESSION_BUDGET_HOURS = 8.0    # stop starting new questions after this (Kaggle kills at ~9-12 h)
 
 # ---- Output ----------------------------------------------------------------
 ON_KAGGLE     = os.path.exists("/kaggle/working")
 BASE_DIR      = "/kaggle/working" if ON_KAGGLE else "."
-M1_OUTPUT_DIR = os.path.join(BASE_DIR, "outputs_milestone1")
+M1_OUTPUT_DIR = os.path.join(BASE_DIR, "outputs_m1_" + M1_PART)
 OUTPUT_DIR    = M1_OUTPUT_DIR          # the Ollama log lands here too
 os.makedirs(M1_OUTPUT_DIR, exist_ok=True)
 
@@ -106,7 +115,7 @@ random.seed(SEED)
 
 EXPERIMENT_CONFIG = {
     "model_name": MODEL_NAME, "supervisor_model": SUPERVISOR_MODEL,
-    "benchmarks": M1_BENCHMARKS, "n_problems": M1_N_PROBLEMS, "seed": SEED,
+    "m1_part": M1_PART, "benchmarks": M1_BENCHMARKS, "n_problems": M1_N_PROBLEMS, "seed": SEED,
     "systems": SYSTEMS, "feedback_tests": FEEDBACK_TESTS,
     "supervisor_by_system": SUPERVISOR_BY_SYSTEM, "reviewer_backend": REVIEWER_BACKEND,
     "reviewer_model": REVIEWER_NAME, "test_agent_systems": TEST_AGENT_SYSTEMS,

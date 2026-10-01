@@ -1,6 +1,6 @@
 # M1 implementation log: repair, reviewers and the test agent (qwen3-coder:30b on Kaggle 2x T4)
 
-Last updated: 2026-09-30. This is the running record of every design decision, change, run and result in the
+Last updated: 2026-10-01. This is the running record of every design decision, change, run and result in the
 Milestone 1 notebook. Add to it; do not rewrite history.
 
 ## 1. What M1 measures
@@ -22,7 +22,11 @@ Cost units: model calls; calls + test executions; tokens (prompt / completion sp
 time x GPUs holding the model); joules (NVML hardware energy counter over each call's wall window; idle 54.9 W for
 both cards).
 
-## 2. Current configuration (notebook v3, file `m1-run-mbpp120-he164-lcb100.ipynb`)
+## 2. Current configuration (v3e: two notebooks, `07_m1-v3e-part-a-mbpp-humaneval.ipynb` and `08_m1-v3e-part-b-livecodebench.ipynb`)
+
+M1 is split into two notebooks built from the same cells; `M1_PART` is the only difference. Part A
+(`"evalplus"`) runs MBPP+ and HumanEval+ into `outputs_m1_evalplus/`; Part B (`"livecodebench"`) runs LiveCodeBench
+into `outputs_m1_livecodebench/`. Each zips to `m1_<part>_results.zip`. Section 19d is in Part B only.
 
 | Setting | Value | Why |
 |---|---|---|
@@ -37,6 +41,7 @@ both cards).
 | Timeouts | 15 s per suite (MBPP+/HE+); LCB 10 s per stdin case, 900 s suite safety cap | The old 60 s LCB suite cap failed slow-but-correct programs |
 | `SESSION_BUDGET_HOURS` | 8.0 | Stop cleanly before Kaggle kills the session; rerun to resume |
 | `RESUME` | True | Questions already in `rows.jsonl` are skipped |
+| `RESUME_FROM_INPUT` | True | Section 3b copies results of an unfinished run, attached as a Kaggle input, into the output folder first; runs with different settings are ignored |
 
 ## 3. Notebook structure (sections)
 
@@ -74,6 +79,7 @@ Output files (in `outputs_milestone1/`): per benchmark `rows.jsonl`, `calls.json
 | 2026-09-27 | v3 | Section 19d: LCB breakdown + re-grade without the suite cap | LCB baseline only 33.3% |
 | 2026-09-28 | v3 | Full benchmarks; LCB suite cap 60 s -> 900 s with 10 s per case | Match the official LCB harness |
 | 2026-09-30 | v3 | MBPP+ 120, HumanEval+ 164, LCB 100 | Run-time budget |
+| 2026-10-01 | v3e | Split into Part A (MBPP+ + HumanEval+) and Part B (LiveCodeBench); 3b restore from attached input; results limited to the sampled questions; time-left estimate per benchmark; 19d re-runs only failed programs | The single v3d run did not finish in one session, and a new Kaggle session starts with an empty /kaggle/working, so the old resume could not see earlier results |
 
 ## 5. Results so far
 
@@ -132,13 +138,17 @@ GPU-s variance vs ~77% for call count (pooled fit; later rebuilt per benchmark).
 
 ## 8. How to run on Kaggle
 
-1. Accelerator **GPU T4 x2**, Internet **On**. No secrets needed for the local reviewer.
-2. Start from a clean `outputs_milestone1/` when the system list or grading rule changes.
-3. Run all cells. If the 8 h budget stops the run: Save Version, start a new session with the saved output
-   attached, run all cells again (it resumes).
-4. Download `milestone1_results.zip`; send `summary.md` and the 19b / 19d outputs for review.
-5. "Error displaying widget: model not found" is the progress-bar widget failing to render. Harmless.
-6. Stay on T4: TPUs cannot run Ollama and have no NVML energy counter.
+1. Two notebooks: Part A (`07_...part-a...`) and Part B (`08_...part-b...`). Import each as its own Kaggle notebook;
+   they can run at the same time if your account allows two GPU sessions, otherwise one after the other.
+2. Accelerator **GPU T4 x2**, Internet **On**. No secrets needed for the local reviewer.
+3. Best: *Save Version -> Save & Run All (Commit)*. It runs with the browser closed (up to 12 h) and saves the
+   output. The run stops starting new questions after `SESSION_BUDGET_HOURS` (8 h) and still writes the analysis.
+4. If it printed `PARTIAL - resume to finish`: open the notebook, *Add Input -> Your Work -> Notebooks ->* this
+   notebook's last version, and run again. Section 3b prints `restored N result rows`; the run continues.
+   After each benchmark it prints minutes per question and the hours still needed.
+5. Download `m1_evalplus_results.zip` / `m1_livecodebench_results.zip`; send `summary.md` (and 19b / 19d output).
+6. "Error displaying widget: model not found" is the progress-bar widget failing to render. Harmless.
+7. Stay on T4: TPUs cannot run Ollama and have no NVML energy counter.
 
 ## 9. Claude Code on Kaggle / Colab (checked against code.claude.com docs, 2026-09-30)
 

@@ -1,7 +1,7 @@
 def _f(v, fmt):
     return "-" if v is None or (isinstance(v, float) and v != v) else fmt % v
 
-L = ["# Milestone 1 (v2) results - %s" % MODEL_NAME, "",
+L = ["# Milestone 1 (v3e, part %s) results - %s" % (M1_PART, MODEL_NAME), "",
      "%s - %d GPU(s) - idle %s - repair feedback: %s tests - graded on hidden tests" % (
          time.strftime("%Y-%m-%d %H:%M"), M1_CONFIG["N_GPUS"],
          _f(M1_CONFIG["IDLE_WATTS"], "%.1f W"), FEEDBACK_TESTS), ""]

@@ -103,6 +103,9 @@ def run_m1_benchmark(tag):
     mins = (time.time() - t0) / 60.0
 
     df, calls, _ = load_saved(tag, label)
+    want = set(p["task_id"] for p in main_set)          # an older, larger run may hold extra questions
+    df = df[df.task_id.isin(want)].reset_index(drop=True)
+    calls = [c for c in calls if c.get("task_id") in want]
     complete = len(df) and df.task_id.nunique() >= len(main_set)
     M1_RESULTS[tag] = {"df": df, "calls": calls, "label": label, "outdir": outdir,
                        "n_target": len(main_set), "complete": bool(complete),
@@ -114,6 +117,12 @@ def run_m1_benchmark(tag):
               % (df.task_id.nunique(),
                  "  ".join("%s %.1f%%" % (SYSTEM_LABEL[s], 100 * pv[s]) for s in SYSTEMS if s in pv),
                  mins))
+    n_run = df.task_id.nunique() - len(done & want)        # questions finished in this session
+    left = len(main_set) - df.task_id.nunique()
+    if n_run > 0:
+        per_q = mins / n_run
+        print("  time: %.1f min per question this session; %d questions left -> about %.1f h more"
+              % (per_q, left, per_q * left / 60.0))
     return df
 
 

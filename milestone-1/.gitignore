@@ -2,3 +2,4 @@ outputs_milestone1/
 *.zip
 __pycache__/
 .ipynb_checkpoints/
+dry_out/

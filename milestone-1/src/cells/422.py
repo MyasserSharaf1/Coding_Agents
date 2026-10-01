@@ -46,14 +46,17 @@ if REGRADE_BENCH in M1_RESULTS:
         p = probs[tid]
         code = tr.get("final_code") or tr["initial_code"]
         key = hashlib.sha256((str(tid) + code).encode()).hexdigest()
+        old = bool(df[(df.task_id == tid) & (df.system == s)].final_hidden_pass.iloc[0])
+        if old:                       # a pass stays a pass with a longer limit: no need to re-run
+            rows.append({"task_id": tid, "system": s, "old_pass": True, "new_pass": True})
+            continue
         if key not in memo:
             memo[key] = regrade(p, code)
-        old = bool(df[(df.task_id == tid) & (df.system == s)].final_hidden_pass.iloc[0])
         rows.append({"task_id": tid, "system": s, "old_pass": old, "new_pass": memo[key]})
     REGRADE = pd.DataFrame(rows)
     REGRADE.to_csv(os.path.join(M1_OUTPUT_DIR, "livecodebench_regrade.csv"), index=False)
     flipped = REGRADE[REGRADE.old_pass != REGRADE.new_pass]
-    print("4) Re-graded %d programs in %.1f min without the %d s whole-suite cap"
+    print("4) Re-graded the failed ones of %d programs in %.1f min without the %d s whole-suite cap"
           % (len(REGRADE), (time.time() - t0) / 60, LCB_TIMEOUT_S))
     print("   programs whose verdict changed: %d (FAIL->PASS %d, PASS->FAIL %d)"
           % (len(flipped), int((~flipped.old_pass & flipped.new_pass).sum()),

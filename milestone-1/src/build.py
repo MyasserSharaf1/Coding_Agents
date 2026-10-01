@@ -1,6 +1,14 @@
 import json, copy, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
-orig = json.load(open(os.path.join(HERE, "orig.ipynb")))
+_o = os.path.join(HERE, "orig.ipynb")
+if not os.path.exists(_o):     # in the repository the original v1 notebook is the base
+    _o = os.path.join(HERE, "..", "notebooks", "01_m1-v1-baseline-vs-repair_n20.ipynb")
+orig = json.load(open(_o))
+# usage: python build.py <output.ipynb> [evalplus|livecodebench]
+PART = sys.argv[2] if len(sys.argv) > 2 else "evalplus"
+assert PART in ("evalplus", "livecodebench"), PART
+PART_TITLE = {"evalplus": "Part A: MBPP+ and HumanEval+",
+              "livecodebench": "Part B: LiveCodeBench"}[PART]
 O = orig["cells"]
 
 def src(i):
@@ -16,10 +24,12 @@ deps = src(3).replace('"nvidia-ml-py",        # NVML: GPU power and energy',
 assert "huggingface_hub" in deps
 
 seq = [
-    ("md", rd("000.md")),
+    ("md", rd("000.md").replace("{PART_TITLE}", PART_TITLE)),
     ("md", "## 1 · Environment"), ("code", src(1)),
     ("md", "## 2 · Dependencies"), ("code", deps),
-    ("md", "## 3 · Configuration — the only cell you should need to edit"), ("code", rd("030.py")),
+    ("md", "## 3 · Configuration — the only cell you should need to edit"), ("code", rd("030.py").replace('M1_PART = "evalplus"', 'M1_PART = "%s"' % PART)),
+    ("md", "### 3b · Resume from an earlier session\nCopies results saved by an earlier, unfinished run "
+           "(attached as an input) into this run's output folder."), ("code", rd("035.py")),
     ("md", src(6)), ("code", src(7)),
     ("md", src(8)), ("code", src(9).replace('os.environ["OLLAMA_MAX_LOADED_MODELS"] = "1"  # nothing else resident in VRAM',
                                'os.environ["OLLAMA_MAX_LOADED_MODELS"] = "2" if REVIEWER_BACKEND == "local" else "1"'
@@ -73,10 +83,12 @@ seq = [
            "review and repair, and the visible / hidden result after each round. Set `WALKTHROUGH_TASKS` to "
            "choose questions; by default it picks the most informative ones."),
     ("code", rd("418.py")),
+*([] if PART != "livecodebench" else [
     ("md", "### 19d · LiveCodeBench sanity check and re-grade\nBreaks the LiveCodeBench baseline down by "
            "problem type, difficulty and failure reason, and re-grades every saved program without the "
            "whole-suite time cap (per-case limits only, as the official harness does). CPU only."),
     ("code", rd("422.py")),
+    ]),
     ("md", "## 20 · Charts\nBlue is always the baseline, orange repair, aqua (hatched) repair + test "
            "agent. Every figure is saved as a PNG."), ("code", rd("430.py")),
     ("code", rd("450.py")), ("code", rd("460.py")), ("code", rd("470.py")), ("code", rd("480.py")),
@@ -86,7 +98,7 @@ seq = [
     ("md", rd("570.md")), ("code", rd("575.py")), ("code", rd("580.py")), ("code", rd("590.py")),
     ("code", rd("600.py")),
     ("md", "## 23 · Summary report"), ("code", rd("620.py")),
-    ("md", src(61).replace("## 24", "## 24")), ("code", src(62)),
+    ("md", rd("660.md")), ("code", rd("660.py")),
     ("md", rd("640.md")),
 ]
 
