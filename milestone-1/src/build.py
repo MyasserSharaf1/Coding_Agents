@@ -27,6 +27,8 @@ seq = [
     ("md", rd("000.md").replace("{PART_TITLE}", PART_TITLE)),
     ("md", "## 1 · Environment"), ("code", src(1)),
     ("md", "## 2 · Dependencies"), ("code", deps),
+    ("md", "### 2b · Claude Code (optional)\nInstalls the `claude` command on this VM so you can ask it about "
+           "the results. Not part of the experiment; off by default."), ("code", rd("025.py")),
     ("md", "## 3 · Configuration — the only cell you should need to edit"), ("code", rd("030.py").replace('M1_PART = "evalplus"', 'M1_PART = "%s"' % PART)),
     ("md", "### 3b · Resume from an earlier session\nCopies results saved by an earlier, unfinished run "
            "(attached as an input) into this run's output folder."), ("code", rd("035.py")),

@@ -80,6 +80,7 @@ Output files (in `outputs_milestone1/`): per benchmark `rows.jsonl`, `calls.json
 | 2026-09-28 | v3 | Full benchmarks; LCB suite cap 60 s -> 900 s with 10 s per case | Match the official LCB harness |
 | 2026-09-30 | v3 | MBPP+ 120, HumanEval+ 164, LCB 100 | Run-time budget |
 | 2026-10-01 | v3e | Split into Part A (MBPP+ + HumanEval+) and Part B (LiveCodeBench); 3b restore from attached input; results limited to the sampled questions; time-left estimate per benchmark; 19d re-runs only failed programs | The single v3d run did not finish in one session, and a new Kaggle session starts with an empty /kaggle/working, so the old resume could not see earlier results |
+| 2026-10-01 | v3e | Section 2b: optional Claude Code install (off by default; token from a Kaggle/Colab secret); Installation section in the README | User request |
 
 ## 5. Results so far
 
@@ -150,7 +151,7 @@ GPU-s variance vs ~77% for call count (pooled fit; later rebuilt per benchmark).
 6. "Error displaying widget: model not found" is the progress-bar widget failing to render. Harmless.
 7. Stay on T4: TPUs cannot run Ollama and have no NVML energy counter.
 
-## 9. Claude Code on Kaggle / Colab (checked against code.claude.com docs, 2026-09-30)
+## 9. Claude Code on Kaggle / Colab (section 2b; checked against code.claude.com docs, 2026-10-01)
 
 - Install: `curl -fsSL https://claude.ai/install.sh | bash` (or `npm install -g @anthropic-ai/claude-code`, Node 22+).
 - Needs a Pro, Max, Team, Enterprise or Console account; the free claude.ai plan does not include Claude Code.

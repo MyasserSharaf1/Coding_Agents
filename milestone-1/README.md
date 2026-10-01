@@ -15,6 +15,35 @@ pair 07 + 08 below (M1 is split into two notebooks from v3e on). The full change
 | v3e | `notebooks/07_m1-v3e-part-a-mbpp-humaneval.ipynb` | 2026-10-01 | Part A: MBPP+ 120 + HumanEval+ 164 (run this) |
 | v3e | `notebooks/08_m1-v3e-part-b-livecodebench.ipynb` | 2026-10-01 | Part B: LiveCodeBench 100 (run this, separately) |
 
+## Installation
+
+**Run the experiment (Kaggle, recommended).** Nothing to install on your computer: the notebooks install their own
+dependencies (Ollama, the models, EvalPlus, LiveCodeBench data, NVML) in the first cells.
+
+1. kaggle.com -> *Create -> New Notebook -> File -> Import Notebook*; import `notebooks/07_...part-a...ipynb`.
+   Do the same for `08_...part-b...ipynb` as a second notebook.
+2. Right sidebar: *Accelerator* **GPU T4 x2**, *Internet* **On** (phone-verified account needed for both).
+3. *Save Version -> Save & Run All (Commit)*. To resume an unfinished run: *Add Input -> Your Work -> Notebooks ->*
+   the notebook's last version, then run again (section 3b restores it).
+
+**Optional: Claude Code inside the notebook (section 2b).** Set `INSTALL_CLAUDE_CODE = True`. It runs
+`curl -fsSL https://claude.ai/install.sh | bash` and logs in with a secret: on your own computer run
+`claude setup-token`, then add the token as a Kaggle / Colab secret named `CLAUDE_CODE_OAUTH_TOKEN` (or use
+`ANTHROPIC_API_KEY`). Needs a Pro, Max, Team, Enterprise or Console account. Then e.g.
+`!claude -p "Read outputs_m1_evalplus/summary.md and explain the results"`.
+
+**Rebuild or test the notebooks locally (Python 3.10+).**
+
+```
+git clone -b milestone-1 https://github.com/MyasserSharaf1/coding_agents && cd coding_agents/milestone-1
+pip install pandas numpy scipy matplotlib requests
+python src/build.py notebooks/07_m1-v3e-part-a-mbpp-humaneval.ipynb evalplus
+python src/build.py notebooks/08_m1-v3e-part-b-livecodebench.ipynb livecodebench
+```
+
+`src/dryrun.py` runs a notebook end to end with a mocked model; it expects local copies of the HumanEval / MBPP data
+files (paths at its top).
+
 ## Find a version
 
 Each version is one commit on this branch. The commit page shows exactly what changed; *browse files* shows the whole folder as it was at that version.
