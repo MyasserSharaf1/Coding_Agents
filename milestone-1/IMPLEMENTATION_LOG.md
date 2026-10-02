@@ -58,11 +58,11 @@ benchmark; 5 paired gains/regressions with Holm p; 6 repair rounds; 7 test-agent
 9 cost per call; 10 per-call cost model (prompt vs completion tokens); 11 per-question calls vs tokens (Spearman
 + bootstrap CI); 12 Spearman matrices per benchmark.
 
-Output files (in `outputs_milestone1/`): per benchmark `rows.jsonl`, `calls.jsonl`, `traces.jsonl`,
+Output files (in `outputs_m1_<part>/`): per benchmark `rows.jsonl`, `calls.jsonl`, `traces.jsonl`,
 `results_long.csv`, `m1_config.json`; top level `metrics.csv`, `stats.csv`, `test_agent_diagnostics.csv`,
 `regressions.csv`, `keep_best_rescore.csv`, `livecodebench_regrade.csv`, `per_agent_costs.csv`,
 `cost_model_per_call.csv`, `power_by_role.csv`, `metric_relationships.csv`, `spearman_<bench>.csv`,
-`stop_reasons.csv`, `summary.md`, all figures; zipped as `milestone1_results.zip`.
+`stop_reasons.csv`, `summary.md`, all figures; zipped as `m1_<part>_results.zip`.
 
 ## 4. Change history
 
@@ -113,6 +113,39 @@ GPU-s variance vs ~77% for call count (pooled fit; later rebuilt per benchmark).
 
 **v3 full HumanEval+ (2026-09-28)**: 89.6% / 89.6% / 90.2% / 86.0% (147 / 147 / 148 / 141 of 164).
 
+**v3e Part A (2026-10-01, `m1_evalplus_results.zip`; MBPP+ 120, HumanEval+ 164; idle 57.5 W)**
+
+| Benchmark | Baseline | Self-review | 7B review | 7B + tests |
+|---|---|---|---|---|
+| MBPP+ pass@1 | 70.8% (85) | 76.7% (92) | 77.5% (93) | 70.8% (85) |
+| MBPP+ GPU-s/q | 2.8 | 4.5 | 4.2 | 14.0 |
+| HumanEval+ pass@1 | 89.6% (147) | 90.2% (148) | 89.6% (147) | 87.8% (144) |
+| HumanEval+ GPU-s/q | 5.9 | 6.8 | 6.7 | 12.7 |
+
+- MBPP+ numbers are identical to v3 (same seeded 120, shared cached drafts, temp 0.1): a replication, not independent evidence.
+  HumanEval+ self-review vs 7B review swapped by one question vs v3 full; test agent 141 -> 144.
+- Paired tests: baseline -> 7B review MBPP+ 8 gains / 0 regressions, raw p = 0.0078, Holm p = 0.0625; baseline -> self-review
+  7 / 0, raw 0.0156, Holm 0.109. Nothing survives Holm over the 8-test family. 7B review -> + tests MBPP+ 1 / 9, raw 0.021, Holm 0.129.
+- Repair headroom (MBPP+, 7B review): 35 baseline failures; 20 questions entered repair, 8 fixed (40%); 15 final answers pass
+  the public tests but fail hidden ones (invisible to the loop). 25 questions unsolved by any system.
+- HumanEval+: 38 / 164 questions have no parseable public tests; 120 drafts pass public tests; only 6 (4%) entered repair.
+- Test agent: 5 tests/question; valid 72% (MBPP+) / 95% (HE+); flagged drafts 56 / 30, real bugs caught 9 / 5, false alarms
+  on correct drafts 33 / 21 (flag precision ~21% / ~19%); +9.8 / +6.0 GPU-s per question over 7B review.
+  regressions.csv lists 8 MBPP+ broken drafts; the 9th McNemar regression (task 301) is a fix 7B review found and the TA arm missed.
+- Keep-the-best re-score (TA arm only differs): MBPP+ 85 -> 89 (+6 -2), still below 7B review's 93 (1 gain / 5 regressions);
+  HumanEval+ 144 -> 147 (= baseline). Keep-best does not rescue the test agent.
+- Per-call cost model (fresh calls): GPU-s = 0.44 + 1.85 per 1k prompt tok + 29.5 per 1k completion tok, R^2 0.99 (split) vs 0.56
+  (total tokens); completion token ~15x a prompt token. Within repaired questions, Spearman(calls, GPU-s) = 0.47 MBPP+, 0.25
+  HE+ (CI crosses 0); Spearman(total tokens, GPU-s) 0.97 / 0.88.
+- GPU-s / wall time = 1.99 for every role (both cards charged on every call, including the 7B reviewer). Mean power ~125 W for
+  every role; Spearman(GPU-s, J) = 0.998-0.999. On this setup GPU-s, joules and wall time are effectively one axis.
+- Decode speed: qwen3-coder:30b ~54-59 tok/s; 7B reviewer ~38-41 tok/s (30B is MoE with ~3B active). The 7B review is cheaper
+  per call only because it writes fewer tokens (~68-81 vs ~150-200 completion tokens).
+- Calls vs GPU-s ranking flip: self-review 1.33 calls / 4.46 GPU-s vs 7B review 1.35 calls / 4.19 GPU-s on MBPP+ (same direction
+  on HE+). Tokens give the same order as GPU-s, and the accuracy gap is 1 question, so this is illustrative only.
+- No ollama errors, no model reloads during measured calls (load_flag 0); 30B 49/49 layers on GPU.
+- Full write-up with every figure explained: M1_evalplus_results_report.pdf (24 pages, sent 2026-10-01).
+
 ## 6. Findings and interpretations
 
 - Repair with public-test feedback gains about 5-6 points on MBPP+; with grading-suite feedback (v1) it looked like +15.
@@ -126,16 +159,34 @@ GPU-s variance vs ~77% for call count (pooled fit; later rebuilt per benchmark).
 - Thesis argument: where accuracy differences fall within noise, systems must be compared on cost; because a repair
   call costs up to 3x a first-draft call in GPU time and tokens explain GPU time far better than call counts,
   hardware-native units are needed. The noise itself is not evidence for energy measurement.
+- (v3e) The cost-axis result is "calls are a poor proxy; split tokens are a near-perfect one". GPU-s and joules add almost nothing
+  beyond split tokens on this hardware (constant ~125 W, GPU-s = 2 x wall). The hardware-native argument has to rest on
+  cases where tokens stop predicting time/energy (different models, MoE vs dense, prompt-heavy calls, other GPUs), not on this run.
+- (v3e) The +6.7 pt repair gain is not significant under the current 8-test Holm family. The thesis question needs a matched-budget
+  comparison (repair vs Best-of-N at equal GPU-s); M1 has no BoN arm, so it cannot say whether repair beats spending the same
+  1.5x budget on more samples.
+- (v3e) The test agent as a repair trigger is a negative result: ~1 in 5 flags is a real bug, and keep-best does not recover it.
 
 ## 7. Known issues and open options (not yet applied)
 
 - **Keep the best program** instead of the last one (19b re-scores this offline). Pre-register before using it.
+  (v3e: re-score shows it does not fix the test agent; still worth it as a no-regression safeguard for the repair arms.)
 - **Only repair when a public test fails**; use test-agent tests only to choose between versions.
 - **Swap roles: 7B writes, 30B reviews** (strong reviewer, cheap drafts; links to C5 adaptive allocation).
+  (v3e: the 7B decodes slower than the 30B MoE on T4, so a 7B writer may not be cheaper in GPU-s.)
 - **30B checks the test agent's tests** before they can trigger a repair (targets false alarms).
 - **Kimi K2.6 reviewer** via NVIDIA NIM (free trial credits) or paid OpenRouter; not in GPU-s/J.
 - LCB contamination: check the printed contest-date range against the model's training cutoff.
 - LCB re-grade (19d) not yet run on the 60 s-cap results.
+- (v3e) Checked in ollama_serve.log: the 7B reviewer is split across both T4s (1.87 GB + 2.30 GB, 29/29 layers on GPU), so
+  charging 2 cards per reviewer call is consistent with the GPU-s definition. (The first 7B load had only 26/29 layers on GPU
+  while the 30B held a large probe KV cache; the warm-up reload fixed this before any measured call.)
+- (v3e) NUM_PREDICT = 512 truncates programs: 33 fresh calls hit the cap (16 MBPP+, 17 HE+); all 3 HumanEval+ baseline
+  SyntaxErrors (HumanEval/130, /32, /81) are truncated drafts. Raise to 1024 for MBPP+/HE+.
+- (v3e) Early stop is inactive with a single public test (22 HE+ questions); HumanEval/130 ran 3 rounds (7 calls, ~77 GPU-s).
+- (v3e) Pre-register one primary comparison (e.g. baseline -> repair_rev on MBPP+) before the LCB / next run instead of an
+  8-test Holm family.
+- (v3e) Add a Best-of-N / majority-vote arm at matched GPU-s (from cached candidate pools) so repair is compared at equal budget.
 
 ## 8. How to run on Kaggle
 
