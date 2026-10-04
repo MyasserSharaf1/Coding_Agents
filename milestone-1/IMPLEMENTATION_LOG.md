@@ -1,6 +1,6 @@
 # M1 implementation log: repair, reviewers and the test agent (qwen3-coder:30b on Kaggle 2x T4)
 
-Last updated: 2026-10-01. This is the running record of every design decision, change, run and result in the
+Last updated: 2026-10-04. **M1 is closed** (MBPP+ and HumanEval+; LiveCodeBench dropped from M1, see section 4). This is the running record of every design decision, change, run and result in the
 Milestone 1 notebook. Add to it; do not rewrite history.
 
 ## 1. What M1 measures
@@ -81,6 +81,7 @@ Output files (in `outputs_m1_<part>/`): per benchmark `rows.jsonl`, `calls.jsonl
 | 2026-09-30 | v3 | MBPP+ 120, HumanEval+ 164, LCB 100 | Run-time budget |
 | 2026-10-01 | v3e | Split into Part A (MBPP+ + HumanEval+) and Part B (LiveCodeBench); 3b restore from attached input; results limited to the sampled questions; time-left estimate per benchmark; 19d re-runs only failed programs | The single v3d run did not finish in one session, and a new Kaggle session starts with an empty /kaggle/working, so the old resume could not see earlier results |
 | 2026-10-01 | v3e | Section 2b: optional Claude Code install (off by default; token from a Kaggle/Colab secret); Installation section in the README | User request |
+| 2026-10-04 | close | M1 closed on Part A (MBPP+ 120, HumanEval+ 164). LiveCodeBench (Part B) dropped from M1; it returns in M2 / WP6 as a time-sliced subset | Part B results could not be downloaded (zip failed); Part A answers M1's questions |
 
 ## 5. Results so far
 
@@ -177,7 +178,7 @@ GPU-s variance vs ~77% for call count (pooled fit; later rebuilt per benchmark).
 - **30B checks the test agent's tests** before they can trigger a repair (targets false alarms).
 - **Kimi K2.6 reviewer** via NVIDIA NIM (free trial credits) or paid OpenRouter; not in GPU-s/J.
 - LCB contamination: check the printed contest-date range against the model's training cutoff.
-- LCB re-grade (19d) not yet run on the 60 s-cap results.
+- LCB re-grade (19d): dropped with Part B; LiveCodeBench returns in M2 / WP6.
 - (v3e) Checked in ollama_serve.log: the 7B reviewer is split across both T4s (1.87 GB + 2.30 GB, 29/29 layers on GPU), so
   charging 2 cards per reviewer call is consistent with the GPU-s definition. (The first 7B load had only 26/29 layers on GPU
   while the 30B held a large probe KV cache; the warm-up reload fixed this before any measured call.)

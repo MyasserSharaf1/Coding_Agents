@@ -16,4 +16,5 @@ accuracy and in hardware cost (calls, tokens, GPU-seconds, joules).
 
 | Milestone | Branch | Status |
 |---|---|---|
-| M1: repair vs baseline, reviewers, test agent (MBPP+, HumanEval+, LiveCodeBench) | `milestone-1` | In progress: final run pending |
+| M1: repair vs baseline, reviewers, test agent (MBPP+, HumanEval+, LiveCodeBench) | `milestone-1` | Done (2026-10-04): MBPP+ and HumanEval+; results in `milestone-1/IMPLEMENTATION_LOG.md` |
+| M2: matched-budget pools, repair chains, simulator (C1, C4, C5 signal check) | `milestone-2` | Started |
